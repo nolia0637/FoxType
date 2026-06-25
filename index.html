@@ -302,6 +302,8 @@
         let currentLineIdx = 0;
 
         let startTime = null;
+        let totalTypedChars = 0;
+        let totalCorrectChars = 0;
         let statInterval = null;
 
         const punctuations = ['.', ',', '!', '?', '"', "'", '`', ';', ':', '-', '_', '(', ')', '[', ']', '{', '}', '“', '”', '‘', '’'];
@@ -575,64 +577,22 @@
             }
         });
 
-        /* ✨ [수정 및 검토] 정밀 보정된 CPM / WPM 계산기 */
-        function updateRealtimeStats() {
+       function updateRealtimeStats() {
             if (!startTime) return;
-            const elapsedMins = (Date.now() - startTime) / 1000 / 60;
-            if (elapsedMins < 0.005) return; // 0.3초 미만일 때는 계산 튐 방지
 
-            let totalTypedChars = 0;
-            let correctTypedChars = 0;
+            const elapsedSeconds = Math.max((Date.now() - startTime) / 1000, 1);
+            const elapsedMinutes = elapsedSeconds / 60;
 
-            // 1. 지나간 줄 계산
-            for (let i = 0; i < currentLineIdx; i++) {
-                const target = lines[i];
-                const typed = typedLinesHistory[i] || "";
-                let tIdx = 0; let sIdx = 0;
-                while (sIdx < target.length && tIdx < typed.length) {
-                    if (optAutoPunct.checked && punctuations.includes(target[sIdx])) {
-                        if (typed[tIdx] === target[sIdx]) { correctTypedChars++; tIdx++; }
-                        sIdx++;
-                    } else {
-                        if (typed[tIdx] === target[sIdx]) correctTypedChars++;
-                        tIdx++; sIdx++;
-                    }
-                }
-                totalTypedChars += typed.length;
-            }
-
-            // 2. 현재 치고 있는 줄 계산
-            const currentTarget = lines[currentLineIdx] || "";
-            const currentTyped = hiddenInput.value;
-            let tIdx = 0; let sIdx = 0;
-            while (sIdx < currentTarget.length && tIdx < currentTyped.length) {
-                if (optAutoPunct.checked && punctuations.includes(currentTarget[sIdx])) {
-                    if (currentTyped[tIdx] === currentTarget[sIdx]) { correctTypedChars++; tIdx++; }
-                    sIdx++;
-                } else {
-                    if (currentTyped[tIdx] === currentTarget[sIdx]) correctTypedChars++;
-                    tIdx++; sIdx++;
-                }
-            }
-            totalTypedChars += currentTyped.length;
-
-            if (totalTypedChars === 0) return;
-
-            // 3. CPM, WPM, 정확도 산출
-            const grossCPM = Math.round(totalTypedChars / elapsedMins);
-            const netCPM = Math.round(correctTypedChars / elapsedMins);
-
-            const grossWPM = Math.round((totalTypedChars / 5) / elapsedMins);
-            const netWPM = Math.round((correctTypedChars / 5) / elapsedMins);
+            const cpm = Math.round(totalCorrectChars / elapsedMinutes);
+            const wpm = Math.round((totalCorrectChars / 5) / elapsedMinutes);
 
             const accuracy =
                 totalTypedChars === 0
                     ? 100
-                    : Math.round(correctTypedChars / totalTypedChars * 100);
+                    : Math.round((totalCorrectChars / totalTypedChars) * 100);
 
-            // 화면에는 정답 기준(Net)을 표시
-            statCpm.innerText = netCPM;
-            statWpm.innerText = netWPM;
+            statCpm.innerText = cpm;
+            statWpm.innerText = wpm;
             statAccuracy.innerText = accuracy;
         }
     </script>
