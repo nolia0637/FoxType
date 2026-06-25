@@ -304,6 +304,7 @@
         let startTime = null;
         let totalTypedChars = 0;
         let totalCorrectChars = 0;
+        let previousLength = 0;
         let statInterval = null;
 
         const punctuations = ['.', ',', '!', '?', '"', "'", '`', ';', ':', '-', '_', '(', ')', '[', ']', '{', '}', '“', '”', '‘', '’'];
@@ -529,73 +530,73 @@
 
        hiddenInput.addEventListener('input', () => {
 
-            if (!startTime && hiddenInput.value.length > 0) {
-                startTime = Date.now();
-                statInterval = setInterval(updateRealtimeStats, 200);
+    if (!startTime && hiddenInput.value.length > 0) {
+        startTime = Date.now();
+        statInterval = setInterval(updateRealtimeStats, 200);
+    }
+
+    const currentText = lines[currentLineIdx] || "";
+
+    if (hiddenInput.value.length > previousLength) {
+        const index = hiddenInput.value.length - 1;
+
+        totalTypedChars++;
+
+        if (hiddenInput.value[index] === currentText[index]) {
+            totalCorrectChars++;
+        }
+    }
+    else if (hiddenInput.value.length < previousLength) {
+        const index = hiddenInput.value.length;
+
+        totalTypedChars--;
+
+        if (hiddenInput.value[index] === currentText[index]) {
+            totalCorrectChars--;
+        }
+    }
+
+    previousLength = hiddenInput.value.length;
+
+    renderTypingState();
+
+    if (currentText) {
+        let tIdx = 0;
+        let sIdx = 0;
+
+        while (sIdx < currentText.length) {
+            const oChar = currentText[sIdx];
+
+            if (optAutoPunct.checked && punctuations.includes(oChar)) {
+                if (tIdx < hiddenInput.value.length && hiddenInput.value[tIdx] === oChar)
+                    tIdx++;
+
+                sIdx++;
             }
-
-            const currentText = lines[currentLineIdx] || "";
-
-            if (hiddenInput.value.length > previousLength) {
-                const index = hiddenInput.value.length - 1;
-
-                totalTypedChars++;
-
-                if (hiddenInput.value[index] === currentText[index]) {
-                    totalCorrectChars++;
+            else {
+                if (tIdx < hiddenInput.value.length) {
+                    tIdx++;
+                    sIdx++;
+                }
+                else {
+                    break;
                 }
             }
-            else if (hiddenInput.value.length < previousLength) {
-                const index = hiddenInput.value.length;
+        }
 
-                totalTypedChars--;
+        if (sIdx === currentText.length && tIdx < hiddenInput.value.length) {
+            typedLinesHistory[currentLineIdx] = hiddenInput.value.slice(0, tIdx);
 
-                if (hiddenInput.value[index] === currentText[index]) {
-                    totalCorrectChars--;
-                }
-            }
+            previousLength = 0;
 
-            previousLength = hiddenInput.value.length;
+            currentLineIdx++;
 
-            renderTypingState();
-
-            if (currentText) {
-                let tIdx = 0;
-                let sIdx = 0;
-    
-                while (sIdx < currentText.length) {
-                    const oChar = currentText[sIdx];
-
-                    if (optAutoPunct.checked && punctuations.includes(oChar)) {
-                        if (tIdx < hiddenInput.value.length && hiddenInput.value[tIdx] === oChar)
-                            tIdx++;
-        
-                        sIdx++;
-                    }
-                    else {
-                        if (tIdx < hiddenInput.value.length) {
-                            tIdx++;
-                            sIdx++;
-                        }
-                        else {
-                            break;
-                        }
-                    }
-                }
-
-                if (sIdx === currentText.length && tIdx < hiddenInput.value.length) {
-                    typedLinesHistory[currentLineIdx] = hiddenInput.value.slice(0, tIdx);
-
-                    previousLength = 0;
-
-                    currentLineIdx++;
-        
-                    setTimeout(() => {
-                    setupLine(false);
-                    }, 40);
-                }
-            }
-        });
+            setTimeout(() => {
+                setupLine(false);
+            }, 40);
+        }
+    }
+});
 
         hiddenInput.addEventListener('keydown', (e) => {
             if (e.ctrlKey || e.metaKey) {
