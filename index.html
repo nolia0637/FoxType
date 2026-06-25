@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <title>🦊 FoxType - 전문적 타자 연습</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --text-light: #cbd5e1;
+            --char-bg-wrong: #fee2e2;
+            --char-text-wrong: #dc2626;
+            --border-color: #e2e8f0;
+            --panel-bg: #ffffff;
+            --panel-shadow: rgba(15, 23, 42, 0.08);
+            --btn-bg: #f1f5f9;
+            --btn-hover: #e2e8f0;
+            --accent: #f97316;
+            --accent-hover: #ea580c;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #121212; 
+            --text-main: #e3e3e3;
+            --text-muted: #a0a0a0;
+            --text-light: #444444;
+            --char-bg-wrong: #451a1a;
+            --char-text-wrong: #f87171;
+            --border-color: #2c2c2c;
+            --panel-bg: #1e1e1e; 
+            --panel-shadow: rgba(0, 0, 0, 0.4);
+            --btn-bg: #2c2c2c;
+            --btn-hover: #3a3a3a;
+            --accent: #f97316;
+            --accent-hover: #ea580c;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-body);
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none; 
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 80vw;
+            max-width: 920px; 
+            transform: translateY(-12vh); 
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .header-zone {
+            position: absolute;
+            top: -100px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        h2 { margin: 0; font-size: 26px; color: var(--text-main); font-weight: 700; letter-spacing: -0.5px; }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-family: 'Pretendard', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            padding: 4px 8px;
+            transition: color 0.2s;
+            text-decoration: none;
+        }
+        .nav-btn:hover { color: var(--accent); }
+        .nav-separator { color: var(--text-light); font-size: 14px; font-weight: 300; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.3);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        [data-theme="dark"] .modal-overlay { background: rgba(0, 0, 0, 0.6); }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .modal-content {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px -12px var(--panel-shadow);
+            padding: 32px;
+            border-radius: 20px;
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            transform: scale(0.95);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        
+        .modal-content h3 { margin: 0; font-size: 21px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+        
+        .option-list { display: flex; flex-direction: column; gap: 16px; }
+        .option-item { display: flex; align-items: center; justify-content: space-between; font-size: 15px; font-weight: 600; color: var(--text-main); position: relative; }
+        
+        .custom-dropdown { position: relative; width: 130px; }
+        .dropdown-trigger {
+            background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border-color);
+            padding: 8px 36px 8px 14px; border-radius: 10px; cursor: pointer; font-family: 'Pretendard', sans-serif; 
+            font-weight: 600; font-size: 14px; outline: none; transition: all 0.2s;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat; background-position: right 12px center; background-size: 14px; text-align: left;
+        }
+        [data-theme="dark"] .dropdown-trigger {
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+        }
+        .dropdown-trigger:hover { background-color: var(--btn-hover); border-color: var(--text-muted); }
+
+        .dropdown-options {
+            position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 10px; box-shadow: 0 10px 25px var(--panel-shadow); z-index: 120; opacity: 0; pointer-events: none;
+            transform: translateY(-6px); transition: all 0.15s ease; overflow: hidden; padding: 4px 0;
+        }
+        .dropdown-options.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .dropdown-option { padding: 9px 14px; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--text-main); transition: background 0.15s; }
+        .dropdown-option:hover { background: var(--btn-bg); }
+        .dropdown-option.selected { color: var(--accent); background: var(--btn-bg); }
+
+        .option-item input[type="checkbox"] {
+            appearance: none; -webkit-appearance: none; background-color: var(--btn-bg); margin: 0; width: 46px; height: 24px;
+            border: 1px solid var(--border-color); border-radius: 100px; position: relative; cursor: pointer;
+            transition: background-color 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .option-item input[type="checkbox"]::before {
+            content: ""; position: absolute; width: 18px; height: 18px; border-radius: 50%; top: 2px; left: 2.5px;
+            background-color: var(--text-muted); transition: transform 0.28s cubic-bezier(0.25, 1, 0.4, 1), background-color 0.25s ease;
+        }
+        .option-item input[type="checkbox"]:checked { background-color: var(--accent); border-color: var(--accent); }
+        .option-item input[type="checkbox"]:checked::before { transform: translateX(21px); background-color: #ffffff; }
+
+        .close-btn {
+            background: var(--accent); color: #ffffff; border: none; padding: 13px; border-radius: 12px; cursor: pointer;
+            font-weight: 700; font-size: 15px; text-align: center; font-family: 'Pretendard', sans-serif; transition: all 0.15s ease;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+        }
+        .close-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .close-btn:active { transform: translateY(0); }
+
+        .stats-bar { display: flex; flex-direction: row; gap: 50px; margin-bottom: 30px; font-size: 18px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+        .stats-bar span { color: var(--text-main); font-size: 26px; font-weight: 700; margin-left: 8px; }
+
+        .typing-area { width: 100%; cursor: text; display: flex; flex-direction: column; gap: 15px; padding-left: 0; box-sizing: border-box; }
+        .line-secondary { font-size: 32px; line-height: 1.6; min-height: 51px; word-wrap: break-word; font-weight: 500; letter-spacing: 2px; }
+        #line-prev { opacity: 0.45; }
+        #line-next { opacity: 0.25; }
+
+        #line-current { font-size: 48px; line-height: 1.6; word-wrap: break-word; font-weight: 700; letter-spacing: 2px; min-height: 76px; }
+        .char { color: var(--text-light); border-bottom: 3px solid transparent; display: inline-block; }
+        
+        .char.current-char { border-bottom: 3px solid var(--accent); animation: cursorBlink 1s infinite alternate; }
+        .char.current-char.has-typed { color: var(--accent) !important; }
+        
+        .char.correct { color: var(--text-main); }
+        .char.incorrect { color: var(--char-text-wrong) !important; background-color: var(--char-bg-wrong); border-radius: 4px; }
+
+        #hidden-input { position: absolute; opacity: 0; z-index: -1; }
+
+        @keyframes slideInUp {
+            from { transform: translateY(12px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes cursorBlink {
+            0% { border-bottom-color: var(--accent); }
+            100% { border-bottom-color: transparent; }
+        }
+        .animate-up { animation: slideInUp 0.25s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-zone">
+            <h2>🦊 FoxType</h2>
+            <div class="header-controls">
+                <button id="btn-open-settings" class="nav-btn">OPTIONS</button>
+                <span class="nav-separator">|</span>
+                <label for="file-input" class="nav-btn" style="cursor: pointer;">UPLOAD</label>
+                <input type="file" id="file-input" accept=".txt" style="display: none;">
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div>WPM: <span id="stat-wpm">0</span></div>
+            <div>CPM: <span id="stat-cpm">0</span></div>
+            <div>정확도: <span id="stat-accuracy">100</span>%</div>
+        </div>
+        
+        <div class="typing-area" id="typing-area">
+            <div id="line-prev" class="line-secondary"></div>
+            <div id="line-current">상단의 UPLOAD를 통해 타자 연습을 시작하세요. (파일 드래그 가능)</div>
+            <div id="line-next" class="line-secondary"></div>
+            
+            <input type="text" id="hidden-input" autocomplete="off" disabled>
+        </div>
+    </div>
+
+    <!-- 옵션 모달 -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>OPTIONS</h3>
+            <div class="option-list">
+                <div class="option-item">
+                    <label>화면 테마</label>
+                    <div class="custom-dropdown">
+                        <div class="dropdown-trigger" id="theme-trigger">화이트 모드</div>
+                        <div class="dropdown-options" id="theme-options">
+                            <div class="dropdown-option selected" data-value="light">화이트 모드</div>
+                            <div class="dropdown-option" data-value="dark">다크 모드</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="option-item">
+                    <label for="opt-auto-punct">문장부호 자동입력</label>
+                    <input type="checkbox" id="opt-auto-punct">
+                </div>
+            </div>
+            <button id="btn-close-settings" class="close-btn">Done</button>
+        </div>
+    </div>
+
+    <!-- 결과 모달 -->
+    <div id="result-modal" class="modal-overlay">
+        <div class="modal-content" style="text-align: center; gap: 20px;">
+            <h3 style="font-size: 24px;">연습 완료! 🦊</h3>
+            <div style="display: flex; flex-direction: column; gap: 14px; margin: 10px 0; font-size: 16px; font-weight: 600; text-align: left; background: var(--btn-bg); padding: 20px; border-radius: 14px; border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between;"><span>최종 WPM:</span><span id="res-wpm" style="color: var(--accent); font-size: 18px; font-weight: 700;">0</span></div>
+                <div style="display: flex; justify-content: space-between;"><span>최종 CPM:</span><span id="res-cpm" style="color: var(--accent); font-size: 18px; font-weight: 700;">0</span></div>
+                <div style="display: flex; justify-content: space-between;"><span>최종 정확도:</span><span id="res-accuracy" style="color: var(--accent); font-size: 18px; font-weight: 700;">100</span>%</div>
+            </div>
+            <button id="btn-restart" class="close-btn" style="width: 100%;">다시하기</button>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const typingArea = document.getElementById('typing-area');
+        const linePrev = document.getElementById('line-prev');
+        const lineCurrent = document.getElementById('line-current');
+        const lineNext = document.getElementById('line-next');
+        const hiddenInput = document.getElementById('hidden-input');
+
+        const btnOpenSettings = document.getElementById('btn-open-settings');
+        const btnCloseSettings = document.getElementById('btn-close-settings');
+        const settingsModal = document.getElementById('settings-modal');
+        const resultModal = document.getElementById('result-modal');
+        const btnRestart = document.getElementById('btn-restart');
+        const resWpm = document.getElementById('res-wpm');
+        const resCpm = document.getElementById('res-cpm');
+        const resAccuracy = document.getElementById('res-accuracy');
+
+        const themeTrigger = document.getElementById('theme-trigger');
+        const themeOptions = document.getElementById('theme-options');
+        const dropdownOptions = themeOptions.querySelectorAll('.dropdown-option');
+
+        const optAutoPunct = document.getElementById('opt-auto-punct');
+        const statWpm = document.getElementById('stat-wpm');
+        const statCpm = document.getElementById('stat-cpm');
+        const statAccuracy = document.getElementById('stat-accuracy');
+
+        let lines = [];
+        let typedLinesHistory = []; 
+        let currentLineIdx = 0;
+
+        let startTime = null;
+        let statInterval = null;
+
+        const punctuations = ['.', ',', '!', '?', '"', "'", '`', ';', ':', '-', '_', '(', ')', '[', ']', '{', '}', '“', '”', '‘', '’'];
+
+        btnOpenSettings.addEventListener('click', () => { settingsModal.classList.add('active'); });
+        function closeModal() {
+            settingsModal.classList.remove('active');
+            themeOptions.classList.remove('active');
+            if (!hiddenInput.disabled) hiddenInput.focus();
+        }
+        btnCloseSettings.addEventListener('click', closeModal);
+        settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeModal(); });
+
+        function resetPractice() {
+            resultModal.classList.remove('active');
+            currentLineIdx = 0;
+            typedLinesHistory = new Array(lines.length).fill("");
+            startTime = null;
+            clearInterval(statInterval);
+            statWpm.innerText = "0";
+            statCpm.innerText = "0";
+            statAccuracy.innerText = "100";
+            hiddenInput.disabled = false;
+            setupLine();
+        }
+
+        btnRestart.addEventListener('click', resetPractice);
+        resultModal.addEventListener('click', (e) => { if (e.target === resultModal) resetPractice(); });
+
+        themeTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            themeOptions.classList.toggle('active');
+        });
+
+        dropdownOptions.forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const themeValue = opt.getAttribute('data-value');
+                document.documentElement.setAttribute('data-theme', themeValue);
+                themeTrigger.innerText = opt.innerText;
+                dropdownOptions.forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+                themeOptions.classList.remove('active');
+            });
+        });
+
+        function handleFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                lines = text.split(/(?<=[.!?]['"”’]?)\s+|\n+/);
+                lines = lines.map(line => line.trim()).filter(line => line.length > 0);
+                if (lines.length === 0) {
+                    lineCurrent.innerText = "읽을 수 있는 문장이 없습니다.";
+                    return;
+                }
+                resetPractice();
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        fileInput.addEventListener('change', function(e) { handleFile(e.target.files[0]); });
+        window.addEventListener('dragover', (e) => { e.preventDefault(); });
+        window.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (settingsModal.classList.contains('active') || resultModal.classList.contains('active')) return; 
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.txt')) { handleFile(file); }
+        });
+
+        document.addEventListener('click', (event) => {
+            themeOptions.classList.remove('active');
+            if (settingsModal.classList.contains('active') || resultModal.classList.contains('active')) return;
+            if (event.target.closest('.header-controls')) return;
+            if (!hiddenInput.disabled) hiddenInput.focus();
+        });
+
+        function renderStaticPassedLine(element, targetText, typedText) {
+            element.innerHTML = '';
+            if (!targetText) return;
+
+            let tIdx = 0;
+            let sIdx = 0;
+            while (sIdx < targetText.length) {
+                const span = document.createElement('span');
+                span.classList.add('char');
+                const origChar = targetText[sIdx];
+
+                if (optAutoPunct.checked && punctuations.includes(origChar)) {
+                    if (tIdx < typedText.length && typedText[tIdx] === origChar) {
+                        span.innerText = origChar === ' ' ? '\u00A0' : origChar;
+                        span.classList.add('correct');
+                        tIdx++;
+                    } else {
+                        span.innerText = origChar === ' ' ? '\u00A0' : origChar;
+                        span.classList.add('correct');
+                    }
+                    sIdx++;
+                } else {
+                    if (tIdx < typedText.length) {
+                        if (typedText[tIdx] === origChar) {
+                            span.innerText = origChar === ' ' ? '\u00A0' : origChar;
+                            span.classList.add('correct');
+                        } else {
+                            span.innerText = typedText[tIdx] === ' ' ? '\u00A0' : typedText[tIdx];
+                            span.classList.add('incorrect');
+                        }
+                        tIdx++; sIdx++;
+                    } else {
+                        span.innerText = origChar === ' ' ? '\u00A0' : origChar;
+                        span.classList.add('incorrect');
+                        sIdx++;
+                    }
+                }
+                element.appendChild(span);
+            }
+        }
+
+        function setupLine(isGoingBack = false) {
+            if (currentLineIdx >= lines.length) {
+                clearInterval(statInterval);
+                resWpm.innerText = statWpm.innerText;
+                resCpm.innerText = statCpm.innerText;
+                resAccuracy.innerText = statAccuracy.innerText;
+                resultModal.classList.add('active');
+                hiddenInput.value = "";
+                hiddenInput.disabled = true;
+                return;
+            }
+
+            hiddenInput.value = isGoingBack ? (typedLinesHistory[currentLineIdx] || '') : '';
+
+            if (currentLineIdx > 0) {
+                renderStaticPassedLine(linePrev, lines[currentLineIdx - 1], typedLinesHistory[currentLineIdx - 1]);
+            } else { linePrev.innerHTML = ""; }
+
+            const currentText = lines[currentLineIdx];
+            lineCurrent.innerHTML = '';
+            for (let i = 0; i < currentText.length; i++) {
+                const span = document.createElement('span');
+                span.classList.add('char');
+                span.setAttribute('data-char', currentText[i]);
+                if (currentText[i] === ' ') { span.innerHTML = '&nbsp;'; } else { span.innerText = currentText[i]; }
+                lineCurrent.appendChild(span);
+            }
+
+            if (currentLineIdx + 1 < lines.length) { lineNext.innerText = lines[currentLineIdx + 1]; } else { lineNext.innerText = ""; }
+
+            typingArea.classList.remove('animate-up');
+            void typingArea.offsetWidth; 
+            typingArea.classList.add('animate-up');
+
+            if (!settingsModal.classList.contains('active') && !resultModal.classList.contains('active')) { hiddenInput.focus(); }
+            renderTypingState();
+        }
+
+        function renderTypingState() {
+            const currentText = lines[currentLineIdx] || "";
+            const typedText = hiddenInput.value;
+            const spans = lineCurrent.children;
+
+            for (let i = 0; i < spans.length; i++) {
+                spans[i].classList.remove('correct', 'incorrect', 'current-char', 'has-typed');
+            }
+
+            let typedIdx = 0;
+            let spanIdx = 0;
+            let currentCaretSpanIdx = -1;
+
+            while (spanIdx < spans.length) {
+                const span = spans[spanIdx];
+                const origChar = span.getAttribute('data-char');
+
+                if (optAutoPunct.checked && punctuations.includes(origChar)) {
+                    if (typedIdx < typedText.length && typedText[typedIdx] === origChar) {
+                        span.classList.add('correct');
+                        span.innerText = origChar === ' ' ? '\u00A0' : origChar;
+                        typedIdx++; spanIdx++;
+                    } else {
+                        span.classList.add('correct');
+                        span.innerText = origChar === ' ' ? '\u00A0' : origChar;
+                        spanIdx++;
+                    }
+                } else {
+                    if (typedIdx < typedText.length) {
+                        if (typedText[typedIdx] === origChar) {
+                            span.classList.add('correct');
+                            span.innerText = origChar === ' ' ? '\u00A0' : origChar;
+                        } else {
+                            if (typedIdx === typedText.length - 1) {
+                                currentCaretSpanIdx = spanIdx;
+                                span.innerText = typedText[typedIdx] === ' ' ? '\u00A0' : typedText[typedIdx];
+                                span.classList.add('has-typed');
+                            } else {
+                                span.classList.add('incorrect');
+                                span.innerText = typedText[typedIdx] === ' ' ? '\u00A0' : typedText[typedIdx];
+                            }
+                        }
+                        typedIdx++; spanIdx++;
+                    } else {
+                        if (currentCaretSpanIdx === -1) currentCaretSpanIdx = spanIdx;
+                        break;
+                    }
+                }
+            }
+
+            if (currentCaretSpanIdx !== -1 && currentCaretSpanIdx < spans.length) {
+                const currentSpan = spans[currentCaretSpanIdx];
+                currentSpan.classList.add('current-char');
+                if (typedIdx < typedText.length) {
+                    currentSpan.classList.add('has-typed');
+                }
+            }
+
+            for (let i = spanIdx; i < spans.length; i++) {
+                const origChar = spans[i].getAttribute('data-char');
+                spans[i].innerText = origChar === ' ' ? '\u00A0' : origChar;
+            }
+
+            updateRealtimeStats();
+        }
+
+        hiddenInput.addEventListener('input', () => {
+            if (!startTime && hiddenInput.value.length > 0) {
+                startTime = Date.now();
+                statInterval = setInterval(updateRealtimeStats, 200);
+            }
+            renderTypingState();
+
+            const currentText = lines[currentLineIdx];
+            if (currentText) {
+                let tIdx = 0;
+                let sIdx = 0;
+                while (sIdx < currentText.length) {
+                    const oChar = currentText[sIdx];
+                    if (optAutoPunct.checked && punctuations.includes(oChar)) {
+                        if (tIdx < hiddenInput.value.length && hiddenInput.value[tIdx] === oChar) tIdx++;
+                        sIdx++;
+                    } else {
+                        if (tIdx < hiddenInput.value.length) { tIdx++; sIdx++; } else { break; }
+                    }
+                }
+                
+                if (sIdx === currentText.length && tIdx < hiddenInput.value.length) {
+                    typedLinesHistory[currentLineIdx] = hiddenInput.value.slice(0, tIdx); 
+                    currentLineIdx++;
+                    setTimeout(() => { setupLine(false); }, 40);
+                }
+            }
+        });
+
+        hiddenInput.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                const blockedKeys = ['a', 'c', 'v', 'z', 'y', 'x'];
+                if (blockedKeys.includes(e.key.toLowerCase())) { e.preventDefault(); return; }
+            }
+
+            if (e.key === 'Backspace' && hiddenInput.value.length === 0 && currentLineIdx > 0) {
+                e.preventDefault();
+                currentLineIdx--;
+                setupLine(true); 
+                return;
+            }
+
+            if (e.key === 'Enter') {
+                e.preventDefault(); 
+                typedLinesHistory[currentLineIdx] = hiddenInput.value; 
+                currentLineIdx++;
+                setupLine(false);
+            }
+        });
+
+        /* ✨ [수정 및 검토] 정밀 보정된 CPM / WPM 계산기 */
+        function updateRealtimeStats() {
+            if (!startTime) return;
+            const elapsedMins = (Date.now() - startTime) / 1000 / 60;
+            if (elapsedMins < 0.005) return; // 0.3초 미만일 때는 계산 튐 방지
+
+            let totalTypedChars = 0;
+            let correctTypedChars = 0;
+
+            // 1. 지나간 줄 계산
+            for (let i = 0; i < currentLineIdx; i++) {
+                const target = lines[i];
+                const typed = typedLinesHistory[i] || "";
+                let tIdx = 0; let sIdx = 0;
+                while (sIdx < target.length && tIdx < typed.length) {
+                    if (optAutoPunct.checked && punctuations.includes(target[sIdx])) {
+                        if (typed[tIdx] === target[sIdx]) { correctTypedChars++; tIdx++; }
+                        sIdx++;
+                    } else {
+                        if (typed[tIdx] === target[sIdx]) correctTypedChars++;
+                        tIdx++; sIdx++;
+                    }
+                }
+                totalTypedChars += typed.length;
+            }
+
+            // 2. 현재 치고 있는 줄 계산
+            const currentTarget = lines[currentLineIdx] || "";
+            const currentTyped = hiddenInput.value;
+            let tIdx = 0; let sIdx = 0;
+            while (sIdx < currentTarget.length && tIdx < currentTyped.length) {
+                if (optAutoPunct.checked && punctuations.includes(currentTarget[sIdx])) {
+                    if (currentTyped[tIdx] === currentTarget[sIdx]) { correctTypedChars++; tIdx++; }
+                    sIdx++;
+                } else {
+                    if (currentTyped[tIdx] === currentTarget[sIdx]) correctTypedChars++;
+                    tIdx++; sIdx++;
+                }
+            }
+            totalTypedChars += currentTyped.length;
+
+            if (totalTypedChars === 0) return;
+
+            // 3. CPM, WPM, 정확도 산출
+            const grossCPM = Math.round(totalTypedChars / elapsedMins);
+            const netCPM = Math.round(correctTypedChars / elapsedMins);
+
+            const grossWPM = Math.round((totalTypedChars / 5) / elapsedMins);
+            const netWPM = Math.round((correctTypedChars / 5) / elapsedMins);
+
+            const accuracy =
+                totalTypedChars === 0
+                    ? 100
+                    : Math.round(correctTypedChars / totalTypedChars * 100);
+
+            // 화면에는 정답 기준(Net)을 표시
+            statCpm.innerText = netCPM;
+            statWpm.innerText = netWPM;
+            statAccuracy.innerText = accuracy;
+        }
+    </script>
+</body>
+</html>
