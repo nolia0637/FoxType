@@ -302,9 +302,6 @@
         let currentLineIdx = 0;
 
         let startTime = null;
-        let totalTypedChars = 0;
-        let totalCorrectChars = 0;
-        let previousLength = 0;
         let statInterval = null;
 
         const punctuations = ['.', ',', '!', '?', '"', "'", '`', ';', ':', '-', '_', '(', ')', '[', ']', '{', '}', '“', '”', '‘', '’'];
@@ -528,37 +525,16 @@
             updateRealtimeStats();
         }
 
-       hiddenInput.addEventListener('input', () => {
+  hiddenInput.addEventListener('input', () => {
 
     if (!startTime && hiddenInput.value.length > 0) {
         startTime = Date.now();
         statInterval = setInterval(updateRealtimeStats, 200);
     }
 
-    const currentText = lines[currentLineIdx] || "";
-
-    if (hiddenInput.value.length > previousLength) {
-        const index = hiddenInput.value.length - 1;
-
-        totalTypedChars++;
-
-        if (hiddenInput.value[index] === currentText[index]) {
-            totalCorrectChars++;
-        }
-    }
-    else if (hiddenInput.value.length < previousLength) {
-        const index = hiddenInput.value.length;
-
-        totalTypedChars--;
-
-        if (hiddenInput.value[index] === currentText[index]) {
-            totalCorrectChars--;
-        }
-    }
-
-    previousLength = hiddenInput.value.length;
-
     renderTypingState();
+
+    const currentText = lines[currentLineIdx];
 
     if (currentText) {
         let tIdx = 0;
@@ -572,13 +548,11 @@
                     tIdx++;
 
                 sIdx++;
-            }
-            else {
+            } else {
                 if (tIdx < hiddenInput.value.length) {
                     tIdx++;
                     sIdx++;
-                }
-                else {
+                } else {
                     break;
                 }
             }
@@ -586,9 +560,6 @@
 
         if (sIdx === currentText.length && tIdx < hiddenInput.value.length) {
             typedLinesHistory[currentLineIdx] = hiddenInput.value.slice(0, tIdx);
-
-            previousLength = 0;
-
             currentLineIdx++;
 
             setTimeout(() => {
@@ -620,23 +591,62 @@
         });
 
        function updateRealtimeStats() {
-            if (!startTime) return;
+    if (!startTime) return;
 
-            const elapsedSeconds = Math.max((Date.now() - startTime) / 1000, 1);
-            const elapsedMinutes = elapsedSeconds / 60;
+    let totalTyped = 0;
+    let totalCorrect = 0;
 
-            const cpm = Math.round(totalCorrectChars / elapsedMinutes);
-            const wpm = Math.round((totalCorrectChars / 5) / elapsedMinutes);
+    for (let i = 0; i <= currentLineIdx; i++) {
 
-            const accuracy =
-                totalTypedChars === 0
-                    ? 100
-                    : Math.round((totalCorrectChars / totalTypedChars) * 100);
+        const target = lines[i] || "";
+        const typed = i === currentLineIdx ? hiddenInput.value : (typedLinesHistory[i] || "");
 
-            statCpm.innerText = cpm;
-            statWpm.innerText = wpm;
-            statAccuracy.innerText = accuracy;
+        let t = 0;
+        let s = 0;
+
+        while (s < target.length) {
+            const ch = target[s];
+
+            if (optAutoPunct.checked && punctuations.includes(ch)) {
+                if (typed[t] === ch) {
+                    totalTyped++;
+                    totalCorrect++;
+                    t++;
+                }
+
+                s++;
+                continue;
+            }
+
+            if (t >= typed.length)
+                break;
+
+            totalTyped++;
+
+            if (typed[t] === ch)
+                totalCorrect++;
+
+            t++;
+            s++;
         }
+
+        if (typed.length > t)
+            totalTyped += typed.length - t;
+    }
+
+    const elapsedMinutes = Math.max((Date.now() - startTime) / 60000, 1 / 60);
+
+    const cpm = Math.round(totalCorrect / elapsedMinutes);
+    const wpm = Math.round((totalCorrect / 5) / elapsedMinutes);
+
+    const accuracy = totalTyped === 0
+        ? 100
+        : Math.round(totalCorrect / totalTyped * 100);
+
+    statCpm.innerText = cpm;
+    statWpm.innerText = wpm;
+    statAccuracy.innerText = accuracy;
+}
     </script>
 </body>
 </html>
